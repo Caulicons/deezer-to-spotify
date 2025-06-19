@@ -13,7 +13,7 @@ func GetTracksFromPlaylist[T any](url string) (data []T, prev string, next strin
 	res, err := http.Get(url)
 	if err != nil {
 		log.Fatalf("Error making GET request: %v", err)
-		return data, prev, next, err
+		return
 	}
 	defer res.Body.Close()
 
@@ -21,7 +21,7 @@ func GetTracksFromPlaylist[T any](url string) (data []T, prev string, next strin
 	err = json.NewDecoder(res.Body).Decode(&playlist)
 	if err != nil {
 		log.Fatalf("Error Converting the request GET request: %v", err)
-		return data, prev, next, err
+		return
 	}
 	return playlist.Data, playlist.Prev, playlist.Next, err
 }
