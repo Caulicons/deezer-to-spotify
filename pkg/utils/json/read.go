@@ -8,7 +8,14 @@ import (
 
 func Read[T any](path string) (data []T, err error) {
 
-	dir := fmt.Sprintf("./../../data/%s", path)
+	// Get current working directory to build absolute path
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting current directory:", err)
+		return
+	}
+
+	dir := fmt.Sprintf("%s/data/%s", cwd, path)
 	rawData, err := os.ReadFile(dir)
 	if err != nil {
 		fmt.Println("Error reading file:", err)
