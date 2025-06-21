@@ -1,134 +1,127 @@
-# 🎶 Deezer ➡️ Spotify Playlist Migrator 🚀
 
-Easily transfer your public Deezer playlists to Spotify with this Go application!  
-Fetch all your Deezer tracks, get their info, and recreate your playlist on Spotify—automatically! 🎧
+
+# 🎵 Deezer to Spotify Playlist Converter 🎵
+
+An interactive CLI tool that helps you transfer your favorite tracks from **Deezer** to **Spotify** with ease!
 
 ---
 
 ## ✨ Features
 
-- 🔗 **Fetch Deezer Playlist Tracks**  
-  Input your Deezer playlist URL and grab all track IDs!
-
-- 🏷️ **Get Track Info**  
-  Retrieve ISRC and title for each track from Deezer.
-
-- 💾 **Save as JSON**  
-  Store track IDs and info for easy access.
-
-- 🔐 **Spotify OAuth2 Authentication**  
-  Securely connect your Spotify account.
-
-- 🆕 **Create Spotify Playlist**  
-  Name your new playlist and fill it with your favorite tracks!
-
-- 📦 **Track Results**  
-  See which tracks were found and which weren’t.
+- 🖥️ **Interactive Terminal Interface** – Step-by-step CLI to guide you through the migration
+- 🎵 **Deezer Playlist Support** – Import from "Loved" tracks or any public playlist
+- 🔍 **Smart Track Matching** – Uses ISRC codes for accurate Spotify track mapping
+- 🔐 **Seamless OAuth Authentication** – Spotify login via browser
+- 📋 **Playlist Management** – List, create, and modify Spotify playlists
+- 🚀 **Batch Processing** – Transfer entire playlists in one command
+- 📊 **Transfer Statistics** – See what was successfully transferred and what wasn't
 
 ---
 
-## 🗂️ Project Structure
+## 🚀 Getting Started
 
-```
+### ✅ Prerequisites
+
+- Go 1.18 or higher
+- A [Spotify Developer Account](https://developer.spotify.com/)
+- Spotify API credentials (Client ID & Secret)
+- A Deezer account with playlists
+
+---
+
+### 📦 Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-username/deezer-to-spotify.git
+cd deezer-to-spotify
+
+# 2. Create your .env file with your Spotify credentials
+touch .env
+# Add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET to .env
+
+# 3. Build the application
+go build -o deezer2spotify ./cmd/shell
+
+# 4. Run the application
+./deezer2spotify
+````
+
+---
+
+## 🔧 How It Works
+
+1. **Enter Deezer Playlist Details**
+
+   * Paste a playlist URL or use your "Loved" tracks
+   * The app fetches track metadata via the Deezer API
+
+2. **Authenticate with Spotify**
+
+   * A browser tab opens automatically
+   * Log in and authorize the app securely with Spotify
+
+3. **Manage Your Music**
+
+   * List your Spotify playlists
+   * Create a new one
+   * Choose a playlist to receive the Deezer tracks
+
+4. **Transfer Tracks**
+
+   * The app searches Spotify for each Deezer track (using ISRC when possible)
+   * Shows what was found or missed
+   * Transfers all matched tracks to the selected playlist
+
+---
+
+## 📁 Project Structure
+
+```text
 cmd/
-  api/
-  app/
-    main.go
-    config/
-    dependencies/
-config/
-data/
-  deezer/
-    track_id.json
-    track_info.json
-  spotify/
-    track_uri.json
-    tracks_not_found.json
+  shell/           # CLI main app
+  api/             # (optional) API integration
 internal/
-  business/
-    deezer/
-      usecase/
-    spotify/
-      usecase/
-  domain/
-    contract/
-    entities/
-  infra/
-    http/
+  business/        # Use cases for Spotify and Deezer
+  domain/entities/ # Core domain models (e.g., Token, Track)
+  infra/http/      # HTTP layer (Spotify auth callback etc.)
 pkg/
-  http/
-  utils/
-    anyToStruct.go
-    json/
+  jsonUtils/       # JSON file helpers
+.env               # Your Spotify credentials
 ```
 
 ---
 
-## 🚦 How It Works
+## 🤔 Troubleshooting
 
-1. **🔗 Deezer:**  
-   Paste your Deezer playlist URL (e.g. `https://api.deezer.com/user/<user_id>/tracks`)  
-   ⬇️  
-   All track IDs are saved to `data/deezer/track_id.json`
-
-2. **🏷️ Track Info:**  
-   The app fetches ISRC and title for each track  
-   ⬇️  
-   Info saved to `data/deezer/track_info.json`
-
-3. **🔐 Spotify:**  
-   Authenticate via OAuth2 (browser consent)  
-   ⬇️  
-   Name your new playlist
-
-4. **🆕 Playlist Creation:**  
-   The app creates your playlist and adds tracks by ISRC/title  
-   ⬇️  
-   Spotify track URIs saved to `data/spotify/track_uri.json`  
-   Tracks not found: `data/spotify/tracks_not_found.json`
-
----
-
-## 🛠️ Getting Started
-
-1. **Clone the repo:**  
-   ```sh
-   git clone https://github.com/yourusername/deezer-to-spotify.git
-   cd deezer-to-spotify
-   ```
-
-2. **Configure:**  
-   Add your Deezer and Spotify credentials to `.env` following the `.env.development` suggests.
-
-3. **Run the app:**  
-   ```sh
-   go run cmd/app/main.go
-   ```
-
-4. **Follow the prompts and enjoy your migrated playlist! 🎉**
-
----
-
-## 📋 Requirements
-
-- Go 1.18+
-- Deezer account with public playlists
-- Spotify developer account (for OAuth2 credentials)
+* **Authentication Issues**: Make sure your Spotify `CLIENT_ID` and `CLIENT_SECRET` are correctly set in `.env`
+* **Missing Tracks**: Some tracks may not be available on Spotify or have slightly different metadata
+* **API Rate Limits**: Spotify may rate-limit you if transferring very large playlists quickly
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests are welcome!  
-For major changes, please open an issue first.  
-Let’s make playlist migration even better! 🚀
+Contributions are welcome!
+
+```bash
+# Fork the repository
+# Create your feature branch
+git checkout -b feature/amazing-feature
+
+# Commit your changes
+git commit -m 'Add some amazing feature'
+
+# Push to your branch
+git push origin feature/amazing-feature
+
+# Open a Pull Request
+```
 
 ---
 
 ## 📄 License
 
-MIT
+This project is licensed under the [MIT License](LICENSE).
 
----
 
-_Made with ❤️ for music lovers!_
