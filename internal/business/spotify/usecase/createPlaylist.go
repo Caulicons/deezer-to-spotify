@@ -65,11 +65,22 @@ func (u *SpotifyCreatePlaylist) Execute() (res map[string]any, erro *response.Er
 	defer resp.Body.Close()
 
 	// Parse and return the response
-	var playlistResponse map[string]interface{}
+	var playlistResponse map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&playlistResponse); err != nil {
 		return res, response.NewInternalErr("Failed to parse playlist response")
 	}
-	res = map[string]any{"status": "completed"}
+
+	playlistID, ok := playlistResponse["id"].(string)
+	if !ok {
+		return res, response.NewInternalErr("Failed to get playlist ID from response")
+	}
+
+	res = map[string]any{
+		"message":     fmt.Sprintf("Playlist with name %s was created with ID: %s", u.name, playlistID),
+		"status":      "completed",
+		"playlist_id": playlistID,
+	}
+
 	return
 }
 

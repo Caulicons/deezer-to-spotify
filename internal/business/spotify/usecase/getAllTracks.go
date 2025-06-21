@@ -128,6 +128,10 @@ func (u *SpotifySearchAllTracks) Execute() (res map[string]any, erro *response.E
 
 	}
 
-	res = map[string]any{"status": "completed"}
+	res = map[string]any{
+		"status":                 "completed",
+		"tracks_found_count":     len(tracksFound),
+		"tracks_not_found_count": len(tracksNotFound),
+	}
 	return
 }
