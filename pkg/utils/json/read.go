@@ -8,10 +8,8 @@ import (
 
 func Read[T any](path string) (data []T, err error) {
 
-	// Get current working directory to build absolute path
-	cwd, err := os.Getwd()
+	cwd, err := getBaseDir()
 	if err != nil {
-		fmt.Println("Error getting current directory:", err)
 		return
 	}
 

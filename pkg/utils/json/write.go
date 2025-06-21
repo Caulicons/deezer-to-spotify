@@ -10,23 +10,15 @@ import (
 // For agreement (by my self only) all the json file are storage in the folder
 func Write[T any](data T, path string) (err error) {
 
-	cwd, err := os.Getwd()
+	cwd, err := getBaseDir()
 	if err != nil {
-		fmt.Println("Error getting current directory:", err)
 		return
 	}
 
-	// Create data directory if it doesn't exist
-	dataDir := fmt.Sprintf("%s/data/", cwd)
-	// if err := os.MkdirAll(dataDir, 0755); err != nil {
-	// 	log.Fatalf("Error creating data directory: %v", err)
-	// 	return err
-	// }
-
-	destPath := fmt.Sprintf("%s/%s", dataDir, path)
-	file, err := os.OpenFile(destPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	dir := fmt.Sprintf("%s/data/%s", cwd, path)
+	file, err := os.OpenFile(dir, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		log.Fatalf("Error opening the file %s: %v", destPath, err)
+		log.Fatalf("Error opening the file %s: %v", dir, err)
 		return err
 	}
 	defer file.Close()
@@ -35,7 +27,7 @@ func Write[T any](data T, path string) (err error) {
 
 	_, err = file.Write(jsonData)
 	if err != nil {
-		log.Fatalf("Error writing file %s: %v", destPath, err)
+		log.Fatalf("Error writing file %s: %v", dir, err)
 		return err
 	}
 
