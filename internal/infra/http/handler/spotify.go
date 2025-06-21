@@ -68,7 +68,7 @@ func (s *SpotifyHandler) CreatePlaylist(w http.ResponseWriter, r *http.Request) 
 	fmt.Println(playlistName)
 
 	usecase := usecase.NewSpotifyCreatePlaylist(playlistName, s.token)
-	playlistResponse, err := usecase.Execute()
+	playlistID, err := usecase.Execute()
 
 	if err != nil {
 		http.Error(w, err.Message, err.StatusCode)
@@ -78,7 +78,11 @@ func (s *SpotifyHandler) CreatePlaylist(w http.ResponseWriter, r *http.Request) 
 	// Return the playlist data as JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(playlistResponse)
+	json.NewEncoder(w).Encode(map[string]any{
+		"message":     fmt.Sprintf("Playlist with name %s was created with ID: %s", playlistName, playlistID),
+		"status":      "completed",
+		"playlist_id": playlistID,
+	})
 }
 
 // Add the tracks to a specific playlist

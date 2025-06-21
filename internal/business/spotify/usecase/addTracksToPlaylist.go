@@ -94,6 +94,9 @@ func (u *SpotifyAddTracksToPlaylist) Execute() (res map[string]any, erro *respon
 		}
 	}
 
-	res = map[string]any{"status": "completed"}
+	res = map[string]any{
+		"status":       "completed",
+		"playlist_url": fmt.Sprintf("https://open.spotify.com/playlist/%s", u.playlistID),
+	}
 	return
 }
