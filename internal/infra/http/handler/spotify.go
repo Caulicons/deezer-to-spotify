@@ -43,6 +43,10 @@ func (s *SpotifyHandler) Me(w http.ResponseWriter, r *http.Request) {
 // Search All Tracks
 func (s *SpotifyHandler) SearchAll(w http.ResponseWriter, r *http.Request) {
 
+	if err := s.checkToken(w); err != nil {
+		return
+	}
+
 	usecase := usecase.NewSpotifySearchAllTracks(s.token)
 	res, err := usecase.Execute()
 
@@ -110,19 +114,29 @@ func (s *SpotifyHandler) AddTracksToPlaylist(w http.ResponseWriter, r *http.Requ
 	// Return success response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]any{
 		"status":  "success",
 		"message": fmt.Sprintf("Added %d tracks to playlist", len(res)),
 	})
 }
 
-// SpotifyTrackFound represents a track found in Spotify
-type SpotifyTrackFound struct {
-	ID    string `json:"id"`
-	URI   string `json:"uri"`
-	Name  string `json:"name"`
-	Title string `json:"title"`
-	Isrc  string `json:"isrc"`
+// GET /spotify/playlists
+func (s *SpotifyHandler) GetAllUserPlaylists(w http.ResponseWriter, r *http.Request) {
+
+	if err := s.checkToken(w); err != nil {
+		return
+	}
+
+	httpClient := &http.Client{}
+	playlists, err := usecase.NewGetAllUserPlaylistsSpotify(httpClient).Execute(s.token)
+
+	if err != nil {
+		http.Error(w, err.Message, err.StatusCode)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(playlists)
 }
 
 // getAuthConfig extracts and validates authentication information from the request

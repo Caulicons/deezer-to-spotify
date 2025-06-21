@@ -11,4 +11,5 @@ type ISpotify interface {
 	CreatePlaylist(w http.ResponseWriter, r *http.Request)
 	SearchAll(w http.ResponseWriter, r *http.Request)
 	AddTracksToPlaylist(w http.ResponseWriter, r *http.Request)
+	GetAllUserPlaylists(w http.ResponseWriter, r *http.Request)
 }

@@ -11,7 +11,8 @@ import (
 )
 
 type SpotifyAuthHandler struct {
-	Auth *entities.SpotifyAuth
+	Auth         *entities.SpotifyAuth
+	CallBackFunc http.HandlerFunc
 }
 
 func NewSpotifyAuthHandler(auth *entities.SpotifyAuth) *SpotifyAuthHandler {
@@ -94,5 +95,11 @@ func (s *SpotifyAuthHandler) CallBack(w http.ResponseWriter, r *http.Request) {
 	// Return the token data as JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(&s.Auth.Token)
+	// Call the CallBackFunc if it's set
+	if s.CallBackFunc != nil {
+		s.CallBackFunc(w, r)
+		return
+	}
+	json.NewEncoder(w).Encode(`{"status": "success", "message": "Authentication successful! You can close this window and return to the terminal."}`)
+
 }

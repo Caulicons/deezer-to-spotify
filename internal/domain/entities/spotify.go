@@ -17,3 +17,10 @@ type SpotifyToken struct {
 	RefreshToken string `json:"refresh_token"`
 	Scope        string `json:"scope"`
 }
+
+type SpotifyPlaylist struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Public      bool   `json:"public"`
+}
