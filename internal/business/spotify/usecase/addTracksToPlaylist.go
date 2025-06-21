@@ -88,15 +88,14 @@ func (u *SpotifyAddTracksToPlaylist) Execute() (res map[string]any, erro *respon
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-			var errorResponse map[string]interface{}
+			var errorResponse map[string]any
 			json.NewDecoder(resp.Body).Decode(&errorResponse)
 			return res, response.NewInternalErr(fmt.Sprintf("Failed to add tracks. Status: %d, Error: %v", resp.StatusCode, errorResponse))
 		}
 	}
 
 	res = map[string]any{
-		"status":       "completed",
-		"playlist_url": fmt.Sprintf("https://open.spotify.com/playlist/%s", u.playlistID),
+		"Playlist URL": fmt.Sprintf("https://open.spotify.com/playlist/%s", u.playlistID),
 	}
 	return
 }

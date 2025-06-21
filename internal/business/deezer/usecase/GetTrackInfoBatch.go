@@ -5,9 +5,9 @@ import (
 	"reflect"
 )
 
-var count = 1
-
+// This is a options one  to get the ID
 func GetTrackInfoBatch[I any, O any](url string, identifies []I) (data []O, err error) {
+	var count = 1
 
 	for _, ident := range identifies {
 		if count == 3 {
@@ -24,8 +24,11 @@ func GetTrackInfoBatch[I any, O any](url string, identifies []I) (data []O, err 
 	return
 }
 
-func GetTrackInfoBatchGetID[I any, O any](url string, identifies []I, getID func(I) int) (data []O, err error) {
+// This is other way to get the ID, i like this
+func GetTrackInfoBatchGetID[I any, O any](url string, identifies []I, getID func(I) int, getTitle func(I) string) (data []O, err error) {
+	var count = 1
 
+	fmt.Println("🚩 Start Getting Deezer Track Info's: ")
 	for _, ident := range identifies {
 
 		id := getID(ident)
@@ -37,7 +40,7 @@ func GetTrackInfoBatchGetID[I any, O any](url string, identifies []I, getID func
 		}
 
 		data = append(data, oneData)
-		fmt.Printf("%d - %d :\n", count, id)
+		fmt.Printf("%d - %s \n", count, getTitle(ident))
 		count++
 	}
 

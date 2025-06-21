@@ -25,20 +25,20 @@ func NewSpotifyCreatePlaylist(name string, token *entities.SpotifyToken) *Spotif
 
 func (u *SpotifyCreatePlaylist) Execute() (playlistID string, erro *response.Err) {
 
-	// Get user ID (needed to create a playlist)
-	userID, err := u.getUserID()
-	if err != nil {
-		return playlistID, response.NewInternalErr("Failed to get user ID: " + err.Error())
-	}
+	// // Get user ID (needed to create a playlist)
+	// userID, err := u.getUserID()
+	// if err != nil {
+	// 	return playlistID, response.NewInternalErr("Failed to get user ID: " + err.Error())
+	// }
 
 	// Create the playlist
-	playlistURL := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists", userID)
+	playlistURL := fmt.Sprintf("https://api.spotify.com/v1/me/playlists")
 
 	// Prepare the request body
 	requestBody := map[string]interface{}{
 		"name":        u.name,
 		"description": "Created via Music App",
-		"public":      false,
+		"public":      true,
 	}
 
 	jsonBody, err := json.Marshal(requestBody)
@@ -77,34 +77,4 @@ func (u *SpotifyCreatePlaylist) Execute() (playlistID string, erro *response.Err
 	}
 
 	return
-}
-
-// getUserID retrieves the current user's Spotify ID
-func (s *SpotifyCreatePlaylist) getUserID() (string, error) {
-	req, err := http.NewRequest("GET", "https://api.spotify.com/v1/me", nil)
-	if err != nil {
-		return "", err
-	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.token.AccessToken))
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to get user profile: %d", resp.StatusCode)
-	}
-
-	var userProfile struct {
-		ID string `json:"id"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&userProfile); err != nil {
-		return "", err
-	}
-
-	return userProfile.ID, nil
 }

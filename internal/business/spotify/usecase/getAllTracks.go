@@ -26,6 +26,7 @@ func (u *SpotifySearchAllTracks) Execute() (res map[string]any, erro *response.E
 
 	var count = 1
 
+	// FIX: This must be based as a dependecie later
 	tracks, err := jsonUtils.Read[entities.DeezerTrackInfo]("deezer/track_info.json")
 	if err != nil {
 		return res, response.NewInternalErr(fmt.Sprintf("Error getting the tracks: %v", err))
@@ -117,22 +118,20 @@ func (u *SpotifySearchAllTracks) Execute() (res map[string]any, erro *response.E
 		count++
 	}
 
+	// FIX: This must be based as a dependecie later
 	// Write results to files
 	if err := jsonUtils.Write(tracksFound, "spotify/track_uri.json"); err != nil {
 		return res, response.NewInternalErr(fmt.Sprintf("Error parsing search results: %v", err))
-
 	}
 
 	if err := jsonUtils.Write(tracksNotFound, "spotify/tracks_not_found.json"); err != nil {
 		return res, response.NewInternalErr(fmt.Sprintf("Error writing not found tracks: %v", err))
-
 	}
 
 	res = map[string]any{
-		"status":                 "completed",
-		"tracks_found_count":     len(tracksFound),
-		"tracks_not_found_count": len(tracksNotFound),
-		"message":                "You can check the jsons in the data folder to see tracks found and not found.",
+		"Tracks found ✅":     len(tracksFound),
+		"Tracks Not Found ❌": len(tracksNotFound),
+		"message":            "You can check the jsons in the data folder to see tracks found and not found.",
 	}
 	return
 }
