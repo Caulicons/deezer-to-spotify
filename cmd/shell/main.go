@@ -27,9 +27,10 @@ func run() error {
 	fmt.Println("🎵 Welcome to Deezer to Spotify Playlist Converter 🎵")
 	fmt.Println("This tool helps you transfer your favorite tracks from Deezer to Spotify")
 	fmt.Printf("======================================================\n\n")
+
 	// Step 1: Ask user for Deezer playlist
 	fmt.Println("First we will need your playlist from the Deezer")
-	err := Deezer()
+	err := DeezerOptions()
 	if err != nil {
 		return fmt.Errorf("failed to process Deezer playlist: %v", err)
 	}
@@ -48,11 +49,11 @@ func run() error {
 	if spotifyToken == nil || spotifyToken.AccessToken == "" {
 		return fmt.Errorf("auth complete but token is empty")
 	}
+
 	fmt.Println("✅ Spotify Auth Successful!")
 
 	// Step 3: Main Menu Loop
 	httpClient := &http.Client{}
-
 	for {
 		fmt.Println("\n🎛️  What do you want to do?")
 		fmt.Println("1. List all Spotify playlists")
@@ -67,13 +68,9 @@ func run() error {
 		case 1:
 			// List all playlists
 			allPlaylists, err := spotifyUS.NewGetAllUserPlaylistsSpotify(httpClient).Execute(spotifyToken)
+			allPlaylists = append([]entities.SpotifyPlaylist{{Name: "♥️ Love Songs"}}, allPlaylists...)
 			if err != nil {
 				fmt.Println("❌ Error fetching playlists:", err.Message)
-				continue
-			}
-
-			if len(allPlaylists) == 0 {
-				fmt.Println("No playlists found.")
 				continue
 			}
 
@@ -94,12 +91,13 @@ func run() error {
 
 			selected := allPlaylists[idx-1]
 
-			// Get tracks (search and map)
+			// Get tracks Info (search and map) in Spotify
 			res, err := spotifyUS.NewSpotifySearchAllTracks(spotifyToken).Execute()
 			if err != nil {
 				fmt.Println("❌ Error searching tracks:", err.Message)
 				continue
 			}
+
 			fmt.Println("\n⏳ Tracks Result: ", selected.Name)
 			for k, v := range res {
 				fmt.Println(k, ":", v)
@@ -121,15 +119,22 @@ func run() error {
 
 			fmt.Println("Adding tracks to playlist... 💨")
 
-			// Add tracks to playlist
-			addResult, err := spotifyUS.NewSpotifyAddTracksToPlaylist(selected.ID, spotifyToken).Execute()
-			if err != nil {
-				fmt.Println("❌ Error adding tracks:", err.Message)
-				continue
+			if selected.Name == "♥️ Love Songs" {
+				res, err = spotifyUS.NewSpotifyAddTrackToLoveSongs(spotifyToken).Execute()
+				if err != nil {
+					fmt.Println("❌ Error adding tracks:", err.Message)
+					continue
+				}
+			} else {
+				res, err = spotifyUS.NewSpotifyAddTracksToPlaylist(selected.ID, spotifyToken).Execute()
+				if err != nil {
+					fmt.Println("❌ Error adding tracks:", err.Message)
+					continue
+				}
 			}
 
 			fmt.Println("\n✅ Tracks added to", selected.Name)
-			for k, v := range addResult {
+			for k, v := range res {
 				fmt.Println(k, ":", v)
 			}
 
@@ -172,7 +177,7 @@ func run() error {
 	}
 }
 
-func Deezer() error {
+func DeezerOptions() error {
 	// URL formats examples
 	// Favorite Playlist = "https://api.deezer.com/user/{your_playlist_ID}/"
 	// Any other Public Playlist = "https://api.deezer.com/playlist/{your_playlist_ID}/tracks"
@@ -231,7 +236,6 @@ outer:
 		return err
 	}
 	jsonUtils.Write(trackInfo, "/deezer/track_info.json")
-	// ---------------------------------------------------------------------------------------------------------------
 
 	return nil
 }

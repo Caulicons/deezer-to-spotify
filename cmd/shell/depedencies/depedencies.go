@@ -18,7 +18,7 @@ type Dependencies struct {
 func BuildDependencies() (depend Dependencies, err error) {
 
 	// Spotify
-	spotifyScopes := []string{"playlist-modify-public", "playlist-modify-private", "playlist-read-private"}
+	spotifyScopes := []string{"playlist-modify-public", "playlist-modify-private", "playlist-read-private", "user-library-modify"}
 	spotifyAuthConfig := usecase.NewSpotifyAuth(spotifyScopes...)
 	spotifyAuth := handler.NewSpotifyAuthHandler(spotifyAuthConfig)
 	depend.SpotifyHandler.Auth = spotifyAuth

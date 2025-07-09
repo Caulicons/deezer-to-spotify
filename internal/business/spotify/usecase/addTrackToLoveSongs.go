@@ -11,63 +11,47 @@ import (
 	response "github.com/caulicons/deezer-to-spotify/pkg/reponse"
 )
 
-// SpotifyTrackFound represents a track found in Spotify
-type SpotifyTrackFound struct {
-	ID    string `json:"id"`
-	URI   string `json:"uri"`
-	Name  string `json:"name"`
-	Title string `json:"title"`
-	Isrc  string `json:"isrc"`
+type SpotifyAddTracksToLoveSongs struct {
+	token *entities.SpotifyToken
 }
 
-type SpotifyAddTracksToPlaylist struct {
-	playlistID string
-	token      *entities.SpotifyToken
-}
+func NewSpotifyAddTrackToLoveSongs(token *entities.SpotifyToken) *SpotifyAddTracksToLoveSongs {
 
-func NewSpotifyAddTracksToPlaylist(playlistID string, token *entities.SpotifyToken) *SpotifyAddTracksToPlaylist {
-
-	return &SpotifyAddTracksToPlaylist{
-		playlistID,
+	return &SpotifyAddTracksToLoveSongs{
 		token,
 	}
 }
 
-func (u *SpotifyAddTracksToPlaylist) Execute() (res map[string]any, erro *response.Err) {
+func (u *SpotifyAddTracksToLoveSongs) Execute() (res map[string]any, erro *response.Err) {
 
-	// Read track URIs from file
 	tracks, err := jsonUtils.Read[SpotifyTrackFound]("spotify/track_uri.json")
 	if err != nil {
 		return res, response.NewInternalErr(fmt.Sprintf("Error reading track URIs: %v", err))
 	}
 
 	// Prepare track URIs for the request
-	var trackURIs []string
+	var tracksID []string
 	for _, track := range tracks {
-		trackURIs = append(trackURIs, track.URI)
+		tracksID = append(tracksID, track.ID)
 	}
 
-	// Spotify API limits to 100 tracks per request, so we need to batch
-	for i := 0; i < len(trackURIs); i += 100 {
-		end := min(i+100, len(trackURIs))
+	// Spotify Limit to add 50 Tracks per request at the Love Song, so we need to batch
+	for i := 0; i < len(tracksID); i += 50 {
+		end := min(i+50, len(tracksID))
+		batchIDs := tracksID[i:end]
 
-		batchURIs := trackURIs[i:end]
-
-		// Prepare API endpoint
-		apiURL := fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", u.playlistID)
-
-		// Prepare request body
+		// Prepare the request
+		apiURL := "https://api.spotify.com/v1/me/tracks"
 		requestBody := map[string]any{
-			"uris": batchURIs,
+			"ids": batchIDs,
 		}
-
 		jsonBody, err := json.Marshal(requestBody)
 		if err != nil {
 			return res, response.NewInternalErr(fmt.Sprintf("Failed to create request body: %v", err))
 		}
 
 		// Create the request
-		req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonBody))
+		req, err := http.NewRequest("PUT", apiURL, bytes.NewBuffer(jsonBody))
 		if err != nil {
 			return res, response.NewInternalErr(fmt.Sprintf("Failed to create request: %v", err))
 		}
@@ -92,7 +76,7 @@ func (u *SpotifyAddTracksToPlaylist) Execute() (res map[string]any, erro *respon
 	}
 
 	res = map[string]any{
-		"Playlist URL": fmt.Sprintf("https://open.spotify.com/playlist/%s", u.playlistID),
+		"Loved Song URL": "https://open.spotify.com/collection/tracks",
 	}
 	return
 }
