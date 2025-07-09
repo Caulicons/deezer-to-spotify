@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/caulicons/deezer-to-spotify/internal/constants"
 	"github.com/caulicons/deezer-to-spotify/internal/domain/entities"
 	"github.com/caulicons/deezer-to-spotify/pkg/jsonUtils"
 	response "github.com/caulicons/deezer-to-spotify/pkg/reponse"
@@ -27,7 +28,7 @@ func (u *SpotifySearchAllTracks) Execute() (res map[string]any, erro *response.E
 	var count = 1
 
 	// FIX: This must be based as a dependecie later
-	tracks, err := jsonUtils.Read[entities.DeezerTrackInfo]("deezer/track_info.json")
+	tracks, err := jsonUtils.Read[entities.DeezerTrackInfo](constants.DeezerTracksFile)
 	if err != nil {
 		return res, response.NewInternalErr(fmt.Sprintf("Error getting the tracks: %v", err))
 	}
@@ -120,7 +121,7 @@ func (u *SpotifySearchAllTracks) Execute() (res map[string]any, erro *response.E
 
 	// FIX: This must be based as a dependecie later
 	// Write results to files
-	if err := jsonUtils.Write(tracksFound, "spotify/track_uri.json"); err != nil {
+	if err := jsonUtils.Write(tracksFound, constants.SpotifyTracksFile); err != nil {
 		return res, response.NewInternalErr(fmt.Sprintf("Error parsing search results: %v", err))
 	}
 

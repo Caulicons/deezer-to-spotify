@@ -6,11 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/caulicons/deezer-to-spotify/internal/constants"
 	"github.com/caulicons/deezer-to-spotify/internal/domain/entities"
 	response "github.com/caulicons/deezer-to-spotify/pkg/reponse"
 )
-
-const spotifyPlaylistsEndpoint = "https://api.spotify.com/v1/me/playlists"
 
 type GetAllUserPlaylistsSpotify struct {
 	httpClient *http.Client
@@ -29,12 +28,12 @@ func NewGetAllUserPlaylistsSpotify(httpClient *http.Client) *GetAllUserPlaylists
 
 func (u *GetAllUserPlaylistsSpotify) Execute(token *entities.SpotifyToken) ([]entities.SpotifyPlaylist, *response.Err) {
 	var allPlaylists []entities.SpotifyPlaylist
-	nextURL := spotifyPlaylistsEndpoint
+	nextURL := constants.SpotifyPlaylistEndpoint
 	limit := 50
 
 	for nextURL != "" {
 		url := fmt.Sprintf("%s?limit=%d", nextURL, limit)
-		if nextURL != spotifyPlaylistsEndpoint {
+		if nextURL != constants.SpotifyPlaylistEndpoint {
 			url = nextURL // If it's a pagination URL, use it directly
 		}
 

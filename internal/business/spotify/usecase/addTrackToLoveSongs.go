@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/caulicons/deezer-to-spotify/internal/constants"
 	"github.com/caulicons/deezer-to-spotify/internal/domain/entities"
 	"github.com/caulicons/deezer-to-spotify/pkg/jsonUtils"
 	response "github.com/caulicons/deezer-to-spotify/pkg/reponse"
@@ -24,7 +25,7 @@ func NewSpotifyAddTrackToLoveSongs(token *entities.SpotifyToken) *SpotifyAddTrac
 
 func (u *SpotifyAddTracksToLoveSongs) Execute() (res map[string]any, erro *response.Err) {
 
-	tracks, err := jsonUtils.Read[SpotifyTrackFound]("spotify/track_uri.json")
+	tracks, err := jsonUtils.Read[SpotifyTrackFound](constants.SpotifyTracksFile)
 	if err != nil {
 		return res, response.NewInternalErr(fmt.Sprintf("Error reading track URIs: %v", err))
 	}

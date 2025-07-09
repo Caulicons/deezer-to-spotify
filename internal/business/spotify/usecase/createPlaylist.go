@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/caulicons/deezer-to-spotify/internal/constants"
 	"github.com/caulicons/deezer-to-spotify/internal/domain/entities"
 	response "github.com/caulicons/deezer-to-spotify/pkg/reponse"
 )
@@ -31,9 +32,6 @@ func (u *SpotifyCreatePlaylist) Execute() (playlistID string, erro *response.Err
 	// 	return playlistID, response.NewInternalErr("Failed to get user ID: " + err.Error())
 	// }
 
-	// Create the playlist
-	playlistURL := fmt.Sprintf("https://api.spotify.com/v1/me/playlists")
-
 	// Prepare the request body
 	requestBody := map[string]interface{}{
 		"name":        u.name,
@@ -47,7 +45,7 @@ func (u *SpotifyCreatePlaylist) Execute() (playlistID string, erro *response.Err
 	}
 
 	// Create the request
-	req, err := http.NewRequest("POST", playlistURL, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequest("POST", constants.SpotifyPlaylistEndpoint, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return playlistID, response.NewInternalErr("Failed to create request")
 	}

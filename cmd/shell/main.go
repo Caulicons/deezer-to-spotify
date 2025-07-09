@@ -10,6 +10,7 @@ import (
 	"github.com/caulicons/deezer-to-spotify/cmd/shell/config"
 	deezerUS "github.com/caulicons/deezer-to-spotify/internal/business/deezer/usecase"
 	spotifyUS "github.com/caulicons/deezer-to-spotify/internal/business/spotify/usecase"
+	"github.com/caulicons/deezer-to-spotify/internal/constants"
 	"github.com/caulicons/deezer-to-spotify/internal/domain/entities"
 	"github.com/caulicons/deezer-to-spotify/pkg/jsonUtils"
 	_ "github.com/joho/godotenv/autoload"
@@ -207,7 +208,7 @@ outer:
 			break outer
 		case 2:
 			fmt.Printf("Enter the Deezer playlist ID: ")
-			fmt.Println("❔➜ When you access your Deezer playlist through Browser,a random number always appears in the URL, the ID is that.")
+			fmt.Println("❔➜ When you access your Deezer playlist through Browser, a random number always appears in the URL, the ID is that.")
 
 			var playlistID string
 			fmt.Print("> ")
@@ -235,7 +236,7 @@ outer:
 	if err != nil {
 		return err
 	}
-	jsonUtils.Write(trackInfo, "/deezer/track_info.json")
+	jsonUtils.Write(trackInfo, constants.DeezerTracksFile)
 
 	return nil
 }
