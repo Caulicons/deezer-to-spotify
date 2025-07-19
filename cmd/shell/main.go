@@ -59,7 +59,8 @@ func run() error {
 		fmt.Println("\n🎛️  What do you want to do?")
 		fmt.Println("1. List all Spotify playlists")
 		fmt.Println("2. Create a new Spotify playlist")
-		fmt.Println("3. Exit")
+		fmt.Println("3. Reset All Love song tracks")
+		fmt.Println("4. Exit")
 		fmt.Print("> ")
 
 		var choice int
@@ -138,7 +139,6 @@ func run() error {
 			for k, v := range res {
 				fmt.Println(k, ":", v)
 			}
-
 		case 2:
 			// Create new playlist
 			fmt.Println("Enter name for the new playlist:")
@@ -169,6 +169,18 @@ func run() error {
 			fmt.Println("✅ Playlist created! ")
 
 		case 3:
+			fmt.Println("choice 4")
+			_, err := spotifyUS.NewGetAllUserSavedTracks().Execute(spotifyToken)
+			if err != nil {
+				fmt.Println("❌ Error Get tracks:", err.Message)
+			}
+
+			_, err = spotifyUS.NewDeleteAllUserSavedTracks().Execute(spotifyToken)
+			if err != nil {
+				fmt.Println("❌ Error Get tracks:", err.Message)
+			}
+
+		case 4:
 			fmt.Println("👋 Goodbye!")
 			return nil
 
