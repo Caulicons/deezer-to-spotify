@@ -24,36 +24,139 @@ func main() {
 }
 func run() error {
 	// Display welcome message
+	Welcome()
+
+	// Step 1: Ask user for Deezer playlist
+	err := DeezerMenu()
+	if err != nil {
+		return fmt.Errorf("failed to process Deezer Menu: %v", err)
+	}
+
+	// Step 2: Spotify Authentication
+	spotifyToken, err := SpotifyAuthenticator()
+	if err != nil {
+		return err
+	}
+
+	// Step 3: Main Menu Loop
+	err = SpotifyMenu(spotifyToken)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Welcome() {
+
 	fmt.Println("\n======================================================")
 	fmt.Println("🎵 Welcome to Deezer to Spotify Playlist Converter 🎵")
 	fmt.Println("This tool helps you transfer your favorite tracks from Deezer to Spotify")
 	fmt.Printf("======================================================\n\n")
+}
 
-	// Step 1: Ask user for Deezer playlist
+func DeezerOptions() error {
+	// URL formats examples
+	// Favorite Playlist = "https://api.deezer.com/user/{your_playlist_ID}/"
+	// Any other Public Playlist = "https://api.deezer.com/playlist/{your_playlist_ID}/tracks"
+	// Documentation : https://developers.deezer.com/api/playlist
+
+	var formattedURL string
+outer:
+	for {
+		fmt.Println("\n🎵 Select your Deezer playlist type:")
+		fmt.Println("1 - Your 'Loved' Playlist")
+		fmt.Println("2 - Any other Public Playlist")
+		fmt.Println("3 - Canceled")
+		fmt.Print("> ")
+
+		var choice int
+		fmt.Scanln(&choice)
+
+		switch choice {
+
+		case 1:
+			fmt.Printf("Enter your Deezer user ID: ")
+			fmt.Println("❔➜ Go to your Deezer profile in the URL you will see some random numbers, that's it.")
+
+			var userID string
+			fmt.Print("> ")
+			fmt.Scanln(&userID)
+
+			formattedURL = fmt.Sprintf("https://api.deezer.com/user/%s/tracks", userID)
+			break outer
+
+		case 2:
+			fmt.Printf("Enter the Deezer playlist ID: ")
+			fmt.Println("❔➜ When you access your Deezer playlist through Browser, a random number always appears in the URL, the ID is that.")
+
+			var playlistID string
+			fmt.Print("> ")
+			fmt.Scanln(&playlistID)
+			formattedURL = fmt.Sprintf("https://api.deezer.com/playlist/%s/tracks", playlistID)
+			break outer
+
+		case 3:
+			return fmt.Errorf("user canceled operation")
+		}
+	}
+
+	// Get Tracks from the Deezer Playlist
+	tracks, err := deezerUS.GetAllTracksFromPlaylistDeezer[entities.DeezerPlaylistTrackData](formattedURL)
+	if err != nil {
+		return err
+	}
+
+	// Get Tracks Info from the Deezer Playlist, this is to get the ISRC
+	trackInfo, err := deezerUS.GetTrackInfoBatchGetID[entities.DeezerPlaylistTrackData, entities.DeezerTrackInfo]("https://api.deezer.com/track", tracks,
+		func(dptd entities.DeezerPlaylistTrackData) int {
+			return dptd.ID
+		},
+		func(dptd entities.DeezerPlaylistTrackData) string {
+			return dptd.Title
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	jsonUtils.Write(trackInfo, constants.DeezerTracksFile)
+
+	return nil
+}
+
+func DeezerMenu() error {
+
 	fmt.Println("First we will need your playlist from the Deezer")
 	err := DeezerOptions()
 	if err != nil {
 		return fmt.Errorf("failed to process Deezer playlist: %v", err)
 	}
 
+	return nil
+}
+
+func SpotifyAuthenticator() (*entities.SpotifyToken, error) {
 	// Step 2: Spotify Authentication
 	fmt.Println("\n🔐 You need to authenticate with Spotify. Press ENTER to continue...")
 	fmt.Scanln()
 
-	tokenReady, spotifyToken := config.StartSpotifyAuthServer()
+	spotifyToken, err := config.StartSpotifyAuthServer()
+	if err != nil {
 
-	success := <-tokenReady
-	if !success {
-		return fmt.Errorf("authentication failed")
+		return nil, fmt.Errorf("authentication failed: %w", err)
 	}
 
 	if spotifyToken == nil || spotifyToken.AccessToken == "" {
-		return fmt.Errorf("auth complete but token is empty")
+		return nil, fmt.Errorf("auth complete but token is empty")
 	}
 
 	fmt.Println("✅ Spotify Auth Successful!")
 
-	// Step 3: Main Menu Loop
+	return spotifyToken, nil
+}
+
+func SpotifyMenu(token *entities.SpotifyToken) error {
 	httpClient := &http.Client{}
 	for {
 		fmt.Println("\n🎛️  What do you want to do?")
@@ -69,7 +172,7 @@ func run() error {
 		switch choice {
 		case 1:
 			// List all playlists
-			allPlaylists, err := spotifyUS.NewGetAllUserPlaylistsSpotify(httpClient).Execute(spotifyToken)
+			allPlaylists, err := spotifyUS.NewGetAllUserPlaylistsSpotify(httpClient).Execute(token)
 			allPlaylists = append([]entities.SpotifyPlaylist{{Name: "♥️ Love Songs"}}, allPlaylists...)
 			if err != nil {
 				fmt.Println("❌ Error fetching playlists:", err.Message)
@@ -94,7 +197,7 @@ func run() error {
 			selected := allPlaylists[idx-1]
 
 			// Get tracks Info (search and map) in Spotify
-			res, err := spotifyUS.NewSpotifySearchAllTracks(spotifyToken).Execute()
+			res, err := spotifyUS.NewSpotifySearchAllTracks(token).Execute()
 			if err != nil {
 				fmt.Println("❌ Error searching tracks:", err.Message)
 				continue
@@ -122,13 +225,13 @@ func run() error {
 			fmt.Println("Adding tracks to playlist... 💨")
 
 			if selected.Name == "♥️ Love Songs" {
-				res, err = spotifyUS.NewSpotifyAddTrackToLoveSongs(spotifyToken).Execute()
+				res, err = spotifyUS.NewSpotifyAddTrackToLoveSongs(token).Execute()
 				if err != nil {
 					fmt.Println("❌ Error adding tracks:", err.Message)
 					continue
 				}
 			} else {
-				res, err = spotifyUS.NewSpotifyAddTracksToPlaylist(selected.ID, spotifyToken).Execute()
+				res, err = spotifyUS.NewSpotifyAddTracksToPlaylist(selected.ID, token).Execute()
 				if err != nil {
 					fmt.Println("❌ Error adding tracks:", err.Message)
 					continue
@@ -160,7 +263,7 @@ func run() error {
 				continue
 			}
 
-			_, erro := spotifyUS.NewSpotifyCreatePlaylist(playlistName, spotifyToken).Execute()
+			_, erro := spotifyUS.NewSpotifyCreatePlaylist(playlistName, token).Execute()
 			if erro != nil {
 				fmt.Println("❌ Error creating playlist:", erro.Message)
 				continue
@@ -170,12 +273,12 @@ func run() error {
 
 		case 3:
 			fmt.Println("choice 4")
-			_, err := spotifyUS.NewGetAllUserSavedTracks().Execute(spotifyToken)
+			_, err := spotifyUS.NewGetAllUserSavedTracks().Execute(token)
 			if err != nil {
 				fmt.Println("❌ Error Get tracks:", err.Message)
 			}
 
-			_, err = spotifyUS.NewDeleteAllUserSavedTracks().Execute(spotifyToken)
+			_, err = spotifyUS.NewDeleteAllUserSavedTracks().Execute(token)
 			if err != nil {
 				fmt.Println("❌ Error Get tracks:", err.Message)
 			}
@@ -188,67 +291,4 @@ func run() error {
 			fmt.Println("❌ Invalid option.")
 		}
 	}
-}
-
-func DeezerOptions() error {
-	// URL formats examples
-	// Favorite Playlist = "https://api.deezer.com/user/{your_playlist_ID}/"
-	// Any other Public Playlist = "https://api.deezer.com/playlist/{your_playlist_ID}/tracks"
-	// Documentation : https://developers.deezer.com/api/playlist
-
-	var formattedURL string
-outer:
-	for {
-		fmt.Println("\n🎵 Select your Deezer playlist type:")
-		fmt.Println("1 - Your 'Loved' Playlist")
-		fmt.Println("2 - Any other Public Playlist")
-		fmt.Println("3 - Canceled")
-		fmt.Print("> ")
-
-		var choice int
-		fmt.Scanln(&choice)
-
-		switch choice {
-
-		case 1:
-			fmt.Printf("Enter your Deezer user ID: ")
-			fmt.Println("❔➜ Go to your Deezer profile in the URL you will see some random numbers, that's it.")
-			var userID string
-			fmt.Print("> ")
-			fmt.Scanln(&userID)
-			formattedURL = fmt.Sprintf("https://api.deezer.com/user/%s/tracks", userID)
-			break outer
-		case 2:
-			fmt.Printf("Enter the Deezer playlist ID: ")
-			fmt.Println("❔➜ When you access your Deezer playlist through Browser, a random number always appears in the URL, the ID is that.")
-
-			var playlistID string
-			fmt.Print("> ")
-			fmt.Scanln(&playlistID)
-			formattedURL = fmt.Sprintf("https://api.deezer.com/playlist/%s/tracks", playlistID)
-			break outer
-		case 3:
-			return fmt.Errorf("user canceled operation")
-		}
-	}
-
-	// Get Tracks from the Deezer Playlist
-	tracks, err := deezerUS.GetAllTracksFromPlaylistDeezer[entities.DeezerPlaylistTrackData](formattedURL)
-	if err != nil {
-		return err
-	}
-
-	// Get Tracks Info from the Deezer Playlist this is to get the ISRC
-	trackInfo, err := deezerUS.GetTrackInfoBatchGetID[entities.DeezerPlaylistTrackData, entities.DeezerTrackInfo]("https://api.deezer.com/track", tracks, func(dptd entities.DeezerPlaylistTrackData) int {
-		return dptd.ID
-	}, func(dptd entities.DeezerPlaylistTrackData) string {
-
-		return dptd.Title
-	})
-	if err != nil {
-		return err
-	}
-	jsonUtils.Write(trackInfo, constants.DeezerTracksFile)
-
-	return nil
 }
