@@ -24,6 +24,7 @@ func NewSpotifyAuthHandler(auth *entities.SpotifyAuth) *SpotifyAuthHandler {
 
 // authorizationURL generates the Spotify authorization URL
 func (s *SpotifyAuthHandler) authorizationURL() string {
+
 	u, _ := url.Parse("https://accounts.spotify.com/authorize")
 	q := u.Query()
 
@@ -44,6 +45,13 @@ func (s *SpotifyAuthHandler) RedirectToSpotifyAuth(w http.ResponseWriter, r *htt
 
 // CallBack handles the Spotify OAuth callback and exchanges the code for an access token
 func (s *SpotifyAuthHandler) CallBack(w http.ResponseWriter, r *http.Request) {
+
+	// the use can't use this function if the CallBackFunc is not set
+	if s.CallBackFunc == nil {
+		http.Error(w, "Callback function not set", http.StatusInternalServerError)
+		return
+	}
+
 	query := r.URL.Query()
 	code := query.Get("code")
 	state := query.Get("state")
@@ -83,23 +91,20 @@ func (s *SpotifyAuthHandler) CallBack(w http.ResponseWriter, r *http.Request) {
 
 	// Handle the response
 	if resp.StatusCode != http.StatusOK {
-		http.Error(w, fmt.Sprintf("Token request failed: %d", resp.StatusCode), resp.StatusCode)
+		http.Error(w, fmt.Sprintf(`{"status": "error", "message": "token request failed, the use not accept the loggin with spotify! You can close this window and return to the terminal."}`), http.StatusUnauthorized)
+		s.CallBackFunc(w, r)
 		return
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&s.Auth.Token); err != nil {
-		http.Error(w, "Failed to parse token response", http.StatusInternalServerError)
-		return
-	}
-
-	// Return the token data as JSON
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	// Call the CallBackFunc if it's set
-	if s.CallBackFunc != nil {
+		http.Error(w, fmt.Sprintf(`{"status": "error", "message": "Failed to decode token response"}`), http.StatusInternalServerError)
 		s.CallBackFunc(w, r)
 		return
 	}
-	json.NewEncoder(w).Encode(`{"status": "success", "message": "Authentication successful! You can close this window and return to the terminal."}`)
 
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(`{"status": "success", "message": "Authentication successful! You can close this window and return to the terminal."}`)
+	s.CallBackFunc(w, r)
+	return
 }
