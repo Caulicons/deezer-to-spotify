@@ -22,10 +22,10 @@ func NewDeleteAllUserSavedTracks() *DeleteUserSavedTracks {
 	return &DeleteUserSavedTracks{}
 }
 
-func (u *DeleteUserSavedTracks) Execute(token *entities.SpotifyToken) (res []entities.SpotifyPlaylist, erro *response.Err) {
+func (u *DeleteUserSavedTracks) Execute(token *entities.SpotifyToken) (erro *response.Err) {
 	tracks, err := jsonUtils.Read[entities.SpotifyPlaylist](constants.SpotifyUserFavoriteTracksFile)
 	if err != nil {
-		return res, response.NewInternalErr(fmt.Sprintf("Error reading favorites track URIs: %v", err))
+		return response.NewInternalErr(fmt.Sprintf("Error reading favorites track URIs: %v", err))
 	}
 
 	var tracksID []string
@@ -45,13 +45,13 @@ func (u *DeleteUserSavedTracks) Execute(token *entities.SpotifyToken) (res []ent
 		}
 		jsonBody, err := json.Marshal(requestBody)
 		if err != nil {
-			return res, response.NewInternalErr(fmt.Sprintf("Failed to create request body: %v", err))
+			return response.NewInternalErr(fmt.Sprintf("Failed to create request body: %v", err))
 		}
 
 		// Create the request
 		req, err := http.NewRequest(http.MethodDelete, apiURL, bytes.NewBuffer(jsonBody))
 		if err != nil {
-			return res, response.NewInternalErr(fmt.Sprintf("Failed to create request: %v", err))
+			return response.NewInternalErr(fmt.Sprintf("Failed to create request: %v", err))
 		}
 
 		// Set headers
@@ -62,14 +62,14 @@ func (u *DeleteUserSavedTracks) Execute(token *entities.SpotifyToken) (res []ent
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			return res, response.NewInternalErr(fmt.Sprintf("Failed to delete tracks to playlist: %v", err))
+			return response.NewInternalErr(fmt.Sprintf("Failed to delete tracks to playlist: %v", err))
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			var errorResponse map[string]any
 			json.NewDecoder(resp.Body).Decode(&errorResponse)
-			return res, response.NewInternalErr(fmt.Sprintf("Failed to delete tracks. Status: %d, Error: %v", resp.StatusCode, errorResponse))
+			return response.NewInternalErr(fmt.Sprintf("Failed to delete tracks. Status: %d, Error: %v", resp.StatusCode, errorResponse))
 		}
 	}
 
@@ -79,5 +79,5 @@ func (u *DeleteUserSavedTracks) Execute(token *entities.SpotifyToken) (res []ent
 
 	fmt.Println(link)
 
-	return nil, nil
+	return nil
 }

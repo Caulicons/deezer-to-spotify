@@ -9,13 +9,13 @@ import (
 )
 
 // NewSpotifyAuth creates a new SpotifyAuth instance
-func NewSpotifyAuth(scopes ...string) *entities.SpotifyAuth {
+func NewSpotifyAuth() *entities.SpotifyAuth {
 	return &entities.SpotifyAuth{
 		ClientID:     os.Getenv("SPOTIFY_CLIENT_ID"),
 		ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
 		RedirectURI:  os.Getenv("SPOTIFY_REDIRECT_URL"),
 		State:        generateRandomString(16),
-		Scopes:       scopes,
+		Scopes:       []string{"playlist-modify-public", "playlist-modify-private", "playlist-read-private", "user-library-modify", "user-library-read"},
 	}
 }
 

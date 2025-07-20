@@ -273,12 +273,12 @@ func SpotifyMenu(token *entities.SpotifyToken) error {
 
 		case 3:
 			fmt.Println("choice 4")
-			_, err := spotifyUS.NewGetAllUserSavedTracks().Execute(token)
+			err := spotifyUS.NewGetAllUserSavedTracks().Execute(token)
 			if err != nil {
 				fmt.Println("❌ Error Get tracks:", err.Message)
 			}
 
-			_, err = spotifyUS.NewDeleteAllUserSavedTracks().Execute(token)
+			err = spotifyUS.NewDeleteAllUserSavedTracks().Execute(token)
 			if err != nil {
 				fmt.Println("❌ Error Get tracks:", err.Message)
 			}
